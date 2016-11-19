@@ -35,8 +35,8 @@ public class CellUtil {
             return Optional.empty();
         } else {
             final String stringValue = String.valueOf(value);
-            if (header.isNumeric()) {
-                return Optional.of(StringUtil.removeNonNumericCharacters(stringValue));
+            if (header.isAmount()) {
+                return Optional.of(StringUtil.parseAsAmount(stringValue));
             }
             return Optional.of(stringValue);
         }

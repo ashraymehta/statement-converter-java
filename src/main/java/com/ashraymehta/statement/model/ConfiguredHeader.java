@@ -18,7 +18,7 @@ public class ConfiguredHeader {
     @JsonProperty
     private List<String> aliases;
     @JsonProperty
-    private boolean isNumeric;
+    private boolean isAmount;
 
     private CellAddress address;
 
@@ -57,8 +57,8 @@ public class ConfiguredHeader {
         return this.address.getColumn();
     }
 
-    public boolean isNumeric() {
-        return isNumeric;
+    public boolean isAmount() {
+        return isAmount;
     }
 
     public boolean wasFound() {

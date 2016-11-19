@@ -22,11 +22,11 @@
       "name": "Amount (INR)",
       "aliases": [],
       "outputField": "Outflow",
-      "isNumeric": true
+      "isAmount": true
     },
     {
       "outputField": "Inflow",
-      "isNumeric": true
+      "isAmount": true
     }
   ]
 }
