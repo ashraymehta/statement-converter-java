@@ -1,37 +1,61 @@
 package com.ashraymehta.statement;
 
-import com.ashraymehta.statement.model.Header;
-import com.ashraymehta.statement.model.HeaderType;
+import com.ashraymehta.statement.model.Config;
+import com.ashraymehta.statement.model.ConfiguredHeader;
+import com.ashraymehta.statement.model.ConfiguredHeaders;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.util.CellAddress;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Optional;
 
 class HeaderManager {
-    private final List<Header> headers;
+    private static final String HEADERS_FILE_NAME = "headers.json";
 
-    HeaderManager() {
-        headers = new ArrayList<>();
+    private ConfiguredHeaders configuredHeaders;
+
+    void initialize() throws IOException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final InputStream inputStream = getClass().getClassLoader().getResourceAsStream(HEADERS_FILE_NAME);
+        final Config config = objectMapper.readValue(inputStream, Config.class);
+
+        configuredHeaders = config.getHeaders();
     }
 
-    void createHeader(HeaderType headerType, Cell cell) {
-        headers.add(new Header(cell.getAddress().getRow(), cell.getAddress().getColumn(), headerType));
+    void createHeaderIfNeeded(Cell cell) {
+        final CellAddress cellAddress = cell.getAddress();
+        try {
+            final String stringCellValue = cell.getStringCellValue();
+            final Optional<ConfiguredHeader> headerConfigOptional = configuredHeaders.get(stringCellValue);
+            headerConfigOptional.ifPresent(configuredHeader -> {
+                System.out.println("Found header " + stringCellValue + " [" + cellAddress + "] of type : " + stringCellValue);
+                configuredHeader.setAddress(cell.getAddress());
+            });
+        } catch (Exception ex) {
+            System.err.println("Could not parse header at [" + cellAddress + "]");
+        }
     }
 
-    Header getHeader(Cell cell) {
+    Optional<ConfiguredHeader> getHeader(Cell cell) {
         final int cellColumn = cell.getAddress().getColumn();
         final int cellRow = cell.getAddress().getRow();
-        for (Header header : headers) {
-            if (header.getColumn() == cellColumn && header.getRow() == cellRow) {
-                return null;
-            } else if (header.getColumn() == cellColumn) {
-                return header;
+        for (ConfiguredHeader header : configuredHeaders) {
+            if (header.wasFound()) {
+                if (header.getRow() > cellRow) {
+                    continue;
+                } else if (header.getColumn() == cellColumn && header.getRow() == cellRow) {
+                    return Optional.empty();
+                } else if (header.getColumn() == cellColumn) {
+                    return Optional.of(header);
+                }
             }
         }
-        return null;
+        return Optional.empty();
     }
 
-    boolean areHeadersCreated() {
-        return headers.size() == HeaderType.values().length;
+    ConfiguredHeaders getConfiguredHeaders() {
+        return configuredHeaders;
     }
 }

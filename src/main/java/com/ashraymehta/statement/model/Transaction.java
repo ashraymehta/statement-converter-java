@@ -32,6 +32,10 @@ public class Transaction {
         return !isEmpty();
     }
 
+    public String getCSVValue() {
+        return String.join(",", date, "", "", memo, String.valueOf(withdrawalAmount), String.valueOf(depositAmount));
+    }
+
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);

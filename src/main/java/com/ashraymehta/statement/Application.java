@@ -1,19 +1,17 @@
 package com.ashraymehta.statement;
 
-import com.ashraymehta.statement.model.Header;
-import com.ashraymehta.statement.model.HeaderActions;
-import com.ashraymehta.statement.model.HeaderType;
-import com.ashraymehta.statement.model.Transaction;
+import com.ashraymehta.statement.model.ConfiguredHeader;
+import com.ashraymehta.statement.util.CellUtil;
 import com.beust.jcommander.JCommander;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellAddress;
 
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 public class Application {
     public static void main(String... args) throws IOException {
@@ -21,54 +19,59 @@ public class Application {
         new JCommander(arguments, args);
 
         final HeaderManager headerManager = new HeaderManager();
-        final HeaderActions headerActions = HeaderActions.create();
-        final List<Transaction> transactions = new ArrayList<>();
 
         final FileInputStream inputStream = new FileInputStream(arguments.file);
         Workbook workbook = new HSSFWorkbook(inputStream);
 
         Sheet firstSheet = workbook.getSheetAt(0);
 
+        headerManager.initialize();
+        createHeaders(headerManager, firstSheet);
+
+        final List<HashMap<ConfiguredHeader, String>> rows = parseRows(firstSheet, headerManager);
+
+        System.out.println("Found [" + rows.size() + "] transactions!");
+        workbook.close();
+        inputStream.close();
+
+        final Path outputPath = Paths.get(arguments.file.getParentFile().getCanonicalPath(), arguments.file.getName() + ".csv");
+        System.out.println("Creating file [" + outputPath + "]");
+        FileWriter writer = new FileWriter(outputPath.toFile());
+        final CSVWriter csvWriter = new CSVWriter(writer);
+        csvWriter.write(headerManager.getConfiguredHeaders());
+
+        csvWriter.write(headerManager.getConfiguredHeaders(), rows);
+
+        csvWriter.close();
+    }
+
+    private static ArrayList<HashMap<ConfiguredHeader, String>> parseRows(Sheet firstSheet, HeaderManager headerManager) {
+        final ArrayList<HashMap<ConfiguredHeader, String>> rows = new ArrayList<>();
+        firstSheet.forEach(row -> {
+            HashMap<ConfiguredHeader, String> values = new HashMap<>();
+            row.forEach(cell -> {
+                headerManager.getHeader(cell).ifPresent(header -> {
+                    final Optional<String> optionalValue = CellUtil.getStringValue(cell);
+                    optionalValue.ifPresent(value -> values.put(header, value));
+                });
+            });
+            if (!values.isEmpty()) {
+                rows.add(values);
+            }
+        });
+        return rows;
+    }
+
+    private static void createHeaders(HeaderManager headerManager, Sheet firstSheet) {
         for (Row nextRow : firstSheet) {
             final Iterator<Cell> cellIterator = nextRow.cellIterator();
-            Transaction transaction = new Transaction();
-
             while (cellIterator.hasNext()) {
                 final Cell cell = cellIterator.next();
                 if (cell.getCellTypeEnum() == CellType.BLANK)
                     continue;
 
-                createHeaderIfNeeded(headerManager, cell);
-                final Header header = headerManager.getHeader(cell);
-                if (header != null) {
-                    headerActions.executeFor(header, transaction, cell);
-                }
+                headerManager.createHeaderIfNeeded(cell);
             }
-
-            if (transaction.isNotEmpty()) {
-                System.out.println("Transaction: [" + transaction.toString() + "]");
-                transactions.add(transaction);
-            }
-        }
-
-        System.out.println("Found [" + transactions.size() + "] transactions!");
-        workbook.close();
-        inputStream.close();
-    }
-
-    private static void createHeaderIfNeeded(HeaderManager headerManager, Cell cell) {
-        if (headerManager.areHeadersCreated())
-            return;
-
-        final CellAddress cellAddress = cell.getAddress();
-        try {
-            final HeaderType headerType = HeaderType.parse(cell.getStringCellValue());
-            if (headerType != null) {
-                System.out.println("Found header " + cell.getStringCellValue() + " [" + cellAddress + "] of type : " + headerType);
-                headerManager.createHeader(headerType, cell);
-            }
-        } catch (Exception ex) {
-            System.err.println("Could not parse header at [" + cellAddress + "]");
         }
     }
 }

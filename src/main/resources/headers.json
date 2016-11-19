@@ -1,0 +1,32 @@
+{
+  "headers": [
+    {
+      "name": "Transaction Date",
+      "aliases": [],
+      "outputField": "Date"
+    },
+    {
+      "name": "Details",
+      "aliases": [],
+      "outputField": "Payee"
+    },
+    {
+      "outputField": "Category"
+    },
+    {
+      "name": "Reference Number",
+      "aliases": [],
+      "outputField": "Memo"
+    },
+    {
+      "name": "Amount (INR)",
+      "aliases": [],
+      "outputField": "Outflow",
+      "isNumeric": true
+    },
+    {
+      "outputField": "Inflow",
+      "isNumeric": true
+    }
+  ]
+}
