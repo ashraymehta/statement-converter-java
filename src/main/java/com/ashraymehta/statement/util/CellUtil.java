@@ -1,11 +1,12 @@
 package com.ashraymehta.statement.util;
 
+import com.ashraymehta.statement.model.ConfiguredHeader;
 import org.apache.poi.ss.usermodel.Cell;
 
 import java.util.Optional;
 
 public class CellUtil {
-    public static Optional<String> getStringValue(Cell cell) {
+    public static Optional<String> getValue(Cell cell, ConfiguredHeader header) {
         Object value = null;
         switch (cell.getCellTypeEnum()) {
             case _NONE:
@@ -33,7 +34,11 @@ public class CellUtil {
         if (value == null) {
             return Optional.empty();
         } else {
-            return Optional.of(String.valueOf(value));
+            final String stringValue = String.valueOf(value);
+            if (header.isNumeric()) {
+                return Optional.of(StringUtil.removeNonNumericCharacters(stringValue));
+            }
+            return Optional.of(stringValue);
         }
     }
 }

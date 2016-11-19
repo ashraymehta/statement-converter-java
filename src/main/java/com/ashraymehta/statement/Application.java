@@ -51,7 +51,7 @@ public class Application {
             HashMap<ConfiguredHeader, String> values = new HashMap<>();
             row.forEach(cell -> {
                 headerManager.getHeader(cell).ifPresent(header -> {
-                    final Optional<String> optionalValue = CellUtil.getStringValue(cell);
+                    final Optional<String> optionalValue = CellUtil.getValue(cell, header);
                     optionalValue.ifPresent(value -> values.put(header, value));
                 });
             });

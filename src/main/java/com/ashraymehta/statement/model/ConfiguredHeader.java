@@ -57,7 +57,7 @@ public class ConfiguredHeader {
         return this.address.getColumn();
     }
 
-    private boolean isNumeric() {
+    public boolean isNumeric() {
         return isNumeric;
     }
 
