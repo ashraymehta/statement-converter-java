@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
+import static java.lang.String.valueOf;
+
 class CSVWriter {
 
     private static final char SEPARATOR = ',';
@@ -27,7 +29,12 @@ class CSVWriter {
             final StringBuilder stringBuilder = new StringBuilder();
             configuredHeaders.forEach(configuredHeader -> {
                 if (row.containsKey(configuredHeader)) {
-                    stringBuilder.append(row.get(configuredHeader));
+                    final String value = row.get(configuredHeader);
+                    if (value.contains(valueOf(SEPARATOR))) {
+                        stringBuilder.append('"').append(value).append('"');
+                    } else {
+                        stringBuilder.append(value);
+                    }
                 }
                 stringBuilder.append(SEPARATOR);
             });
