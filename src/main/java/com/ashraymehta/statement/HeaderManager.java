@@ -6,6 +6,8 @@ import com.ashraymehta.statement.model.ConfiguredHeaders;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.util.CellAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +15,7 @@ import java.util.Optional;
 
 class HeaderManager {
     private static final String HEADERS_FILE_NAME = "headers.json";
+    private static final Logger logger = LoggerFactory.getLogger(HeaderManager.class);
 
     private ConfiguredHeaders configuredHeaders;
 
@@ -30,11 +33,11 @@ class HeaderManager {
             final String stringCellValue = cell.getStringCellValue();
             final Optional<ConfiguredHeader> headerConfigOptional = configuredHeaders.get(stringCellValue);
             headerConfigOptional.ifPresent(configuredHeader -> {
-                System.out.println("Found header " + stringCellValue + " [" + cellAddress + "] of type : " + stringCellValue);
+                logger.info("Found header : {} ({})", stringCellValue, cellAddress);
                 configuredHeader.setAddress(cell.getAddress());
             });
         } catch (Exception ex) {
-            System.err.println("Could not parse header at [" + cellAddress + "]");
+            logger.error("Could not parse header at [{}]", cellAddress);
         }
     }
 
